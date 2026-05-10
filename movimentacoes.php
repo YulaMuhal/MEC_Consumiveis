@@ -1,0 +1,103 @@
+<?php
+require_once 'config.php';
+requireRole(['admin','gestor']);
+$currentPage = 'movimentacoes';
+$pageTitle   = 'Movimentações de Estoque';
+
+$db = db();
+
+$tipo    = $_GET['tipo'] ?? '';
+$periodo = $_GET['periodo'] ?? '';
+$busca   = trim($_GET['q'] ?? '');
+
+$where  = "WHERE 1=1";
+$params = [];
+
+if ($tipo) { $where .= " AND m.tipo=?"; $params[] = $tipo; }
+if ($busca) { $where .= " AND c.nome LIKE ?"; $params[] = "%$busca%"; }
+if ($periodo === 'hoje') $where .= " AND DATE(m.criado_em)=CURDATE()";
+elseif ($periodo === 'semana') $where .= " AND m.criado_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
+elseif ($periodo === 'mes')    $where .= " AND m.criado_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+
+$stmt = $db->prepare(
+    "SELECT m.*, c.nome AS consumivel_nome, c.unidade, u.nome AS user_nome
+     FROM movimentacoes m
+     JOIN consumiveis c ON c.id = m.consumivel_id
+     LEFT JOIN utilizadores u ON u.id = m.utilizador_id
+     $where
+     ORDER BY m.criado_em DESC LIMIT 200"
+);
+$stmt->execute($params);
+$movs = $stmt->fetchAll();
+
+include 'partials/header.php';
+?>
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom:20px;padding:16px 24px">
+  <form method="GET" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
+    <div class="form-group" style="flex:2;min-width:160px;margin:0">
+      <label style="margin-bottom:6px">Consumível</label>
+      <input type="text" name="q" value="<?= htmlspecialchars($busca) ?>" placeholder="Nome...">
+    </div>
+    <div class="form-group" style="flex:1;min-width:130px;margin:0">
+      <label style="margin-bottom:6px">Tipo</label>
+      <select name="tipo">
+        <option value="">Todos</option>
+        <option value="entrada" <?= $tipo==='entrada'?'selected':'' ?>>Entrada</option>
+        <option value="saida"   <?= $tipo==='saida'  ?'selected':'' ?>>Saída</option>
+      </select>
+    </div>
+    <div class="form-group" style="flex:1;min-width:130px;margin:0">
+      <label style="margin-bottom:6px">Período</label>
+      <select name="periodo">
+        <option value="">Todos</option>
+        <option value="hoje" <?= $periodo==='hoje'?'selected':'' ?>>Hoje</option>
+        <option value="semana" <?= $periodo==='semana'?'selected':'' ?>>7 dias</option>
+        <option value="mes" <?= $periodo==='mes'?'selected':'' ?>>30 dias</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary" style="height:44px"><i class="fas fa-search"></i> Filtrar</button>
+    <?php if ($busca||$tipo||$periodo): ?>
+      <a href="movimentacoes.php" class="btn btn-ghost" style="height:44px">Limpar</a>
+    <?php endif; ?>
+  </form>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <i class="fas fa-arrow-right-arrow-left" style="color:var(--verde)"></i>
+    <?= count($movs) ?> movimentação(ões)
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Consumível</th><th>Tipo</th><th>Quantidade</th><th>Referência</th><th>Utilizador</th><th>Data</th>
+      </tr></thead>
+      <tbody>
+      <?php if (empty($movs)): ?>
+        <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--sub)">Nenhuma movimentação encontrada.</td></tr>
+      <?php else: ?>
+      <?php foreach ($movs as $m): ?>
+        <tr>
+          <td><strong><?= htmlspecialchars($m['consumivel_nome']) ?></strong></td>
+          <td>
+            <?php if ($m['tipo'] === 'entrada'): ?>
+              <span class="badge badge-ok"><i class="fas fa-arrow-up"></i> Entrada</span>
+            <?php else: ?>
+              <span class="badge badge-pendente"><i class="fas fa-arrow-down"></i> Saída</span>
+            <?php endif; ?>
+          </td>
+          <td><strong><?= $m['quantidade'] ?></strong> <?= htmlspecialchars($m['unidade']) ?></td>
+          <td style="font-size:0.85rem;color:var(--sub)"><?= htmlspecialchars($m['referencia'] ?? '—') ?></td>
+          <td style="font-size:0.85rem"><?= htmlspecialchars($m['user_nome'] ?? '—') ?></td>
+          <td style="font-size:0.8rem;color:var(--sub)"><?= date('d/m/Y H:i', strtotime($m['criado_em'])) ?></td>
+        </tr>
+      <?php endforeach; ?>
+      <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<?php include 'partials/footer.php'; ?>
