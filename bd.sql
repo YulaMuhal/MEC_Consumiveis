@@ -130,3 +130,14 @@ CREATE TABLE logs (
   criado_em      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (utilizador_id) REFERENCES utilizadores(id)
 );
+
+
+INSERT INTO utilizadores (nome, email, senha, role_id, unidade)
+VALUES (
+  'Yula Muhal',
+  'yula@mec.gov.mz',
+  '$2y$10$WUmjBbJj50AIXQHInVczVuwTpwNZ7BnMBZmKgLHZIXHfK29GqoYG2',
+  1,
+  'DTIC'
+);
+

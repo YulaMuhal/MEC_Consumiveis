@@ -31,26 +31,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $itensList = $itens->fetchAll();
 
                 $semStock = [];
+                $db->beginTransaction();
                 foreach ($itensList as $it) {
-                    $stock = $db->prepare("SELECT quantidade FROM estoque WHERE consumivel_id=?");
+                    $stock = $db->prepare("SELECT quantidade FROM estoque WHERE consumivel_id=? FOR UPDATE");
                     $stock->execute([$it['consumivel_id']]);
                     $s = $stock->fetchColumn();
                     if ($s < $it['quantidade']) $semStock[] = $it['nome'];
                 }
 
                 if (!empty($semStock)) {
+                    $db->rollBack();
                     $err = 'Stock insuficiente para: ' . implode(', ', $semStock);
                 } else {
-                    foreach ($itensList as $it) {
-                        $db->prepare("UPDATE estoque SET quantidade=quantidade-? WHERE consumivel_id=?")
-                           ->execute([$it['quantidade'], $it['consumivel_id']]);
-                        $db->prepare("INSERT INTO movimentacoes (consumivel_id, tipo, quantidade, referencia, utilizador_id) VALUES (?,?,?,?,?)")
-                           ->execute([$it['consumivel_id'], 'saida', $it['quantidade'], "Req: {$requisicao['numero']}", $user['id']]);
+                    try {
+                        foreach ($itensList as $it) {
+                            $db->prepare("UPDATE estoque SET quantidade=quantidade-? WHERE consumivel_id=?")
+                               ->execute([$it['quantidade'], $it['consumivel_id']]);
+                            $db->prepare("INSERT INTO movimentacoes (consumivel_id, tipo, quantidade, referencia, utilizador_id) VALUES (?,?,?,?,?)")
+                               ->execute([$it['consumivel_id'], 'saida', $it['quantidade'], "Req: {$requisicao['numero']}", $user['id']]);
+                        }
+                        $db->prepare("UPDATE requisicoes SET estado='realizada', observacao=? WHERE id=?")
+                           ->execute([$obs, $reqId]);
+                        $db->commit();
+                        logAction("Requisição realizada: {$requisicao['numero']}");
+                        $msg = "Requisição {$requisicao['numero']} marcada como Realizada. Stock actualizado.";
+                    } catch (Exception $e) {
+                        $db->rollBack();
+                        $err = 'Erro ao processar requisição. Tente novamente.';
                     }
-                    $db->prepare("UPDATE requisicoes SET estado='realizada', observacao=? WHERE id=?")
-                       ->execute([$obs, $reqId]);
-                    logAction("Requisição realizada: {$requisicao['numero']}");
-                    $msg = "Requisição {$requisicao['numero']} marcada como Realizada. Stock actualizado.";
                 }
             } else {
                 // Perda

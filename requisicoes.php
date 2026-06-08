@@ -21,33 +21,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['CONTENT_TYPE'])
         echo json_encode(['ok'=>false,'erro'=>'Setor e itens são obrigatórios.']); exit;
     }
 
-    // Verificar stock para cada item
-    foreach ($itens as $item) {
-        $cid = (int)($item['consumivel_id'] ?? 0);
-        $qty = (int)($item['quantidade'] ?? 0);
-        $row = $db->prepare("SELECT e.quantidade, c.nome FROM estoque e JOIN consumiveis c ON c.id=e.consumivel_id WHERE e.consumivel_id=?");
-        $row->execute([$cid]);
-        $stock = $row->fetch();
-        if (!$stock || $stock['quantidade'] < $qty) {
-            echo json_encode(['ok'=>false,'erro'=>"Stock insuficiente para \"{$stock['nome']}\". Disponível: {$stock['quantidade']}."]); exit;
-        }
-    }
-
-    // Gerar número único
+    // Gerar número único com AUTO_INCREMENT como base
     $numero = 'REQ-' . strtoupper(substr(preg_replace('/[^A-Z]/i','', $user['unidade'] ?: 'MEC'), 0, 3))
-              . '-' . date('y') . '-' . str_pad(rand(1,9999), 4, '0', STR_PAD_LEFT);
+              . '-' . date('ymd') . '-' . str_pad(mt_rand(1,9999), 4, '0', STR_PAD_LEFT);
 
-    // Inserir requisição
-    $db->prepare(
-        "INSERT INTO requisicoes (utilizador_id, numero, setor, justificativa, estado) VALUES (?,?,?,?,'pendente')"
-    )->execute([$user['id'], $numero, $setor, $just]);
-    $reqId = $db->lastInsertId();
+    try {
+        $db->beginTransaction();
 
-    // Inserir itens
-    foreach ($itens as $item) {
-        $db->prepare("INSERT INTO requisicao_itens (requisicao_id, consumivel_id, quantidade) VALUES (?,?,?)")
-           ->execute([$reqId, (int)$item['consumivel_id'], (int)$item['quantidade']]);
+        // Verificar stock com lock para evitar race condition
+        foreach ($itens as $item) {
+            $cid = (int)($item['consumivel_id'] ?? 0);
+            $qty = (int)($item['quantidade'] ?? 0);
+            $row = $db->prepare("SELECT e.quantidade, c.nome FROM estoque e JOIN consumiveis c ON c.id=e.consumivel_id WHERE e.consumivel_id=? FOR UPDATE");
+            $row->execute([$cid]);
+            $stock = $row->fetch();
+            if (!$stock || $stock['quantidade'] < $qty) {
+                $db->rollBack();
+                $nome = $stock['nome'] ?? 'item';
+                $disp = $stock['quantidade'] ?? 0;
+                echo json_encode(['ok'=>false,'erro'=>"Stock insuficiente para \"{$nome}\". Disponível: {$disp}."]); exit;
+            }
+        }
+
+        // Inserir requisição
+        $db->prepare(
+            "INSERT INTO requisicoes (utilizador_id, numero, setor, justificativa, estado) VALUES (?,?,?,?,'pendente')"
+        )->execute([$user['id'], $numero, $setor, $just]);
+        $reqId = $db->lastInsertId();
+
+        // Inserir itens
+        foreach ($itens as $item) {
+            $db->prepare("INSERT INTO requisicao_itens (requisicao_id, consumivel_id, quantidade) VALUES (?,?,?)")
+               ->execute([$reqId, (int)$item['consumivel_id'], (int)$item['quantidade']]);
+        }
+
+        $db->commit();
+    } catch (Exception $e) {
+        $db->rollBack();
+        echo json_encode(['ok'=>false,'erro'=>'Erro interno. Tente novamente.']); exit;
     }
+
     logAction("Requisição submetida: $numero");
     echo json_encode(['ok'=>true,'numero'=>$numero]); exit;
 }
