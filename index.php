@@ -288,6 +288,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <h2>Entrar no sistema</h2>
       <p class="subtitle">Insira as suas credenciais para aceder ao SIGEC</p>
 
+      <?php if (isset($_GET['timeout'])): ?>
+        <div class="erro-msg" style="background:#fffbeb;border-color:#fde68a;color:#92400e">
+          <i class="fas fa-clock"></i> Sessão terminada por inactividade. Faça login novamente.
+        </div>
+      <?php endif; ?>
       <?php if ($erro): ?>
         <div class="erro-msg"><i class="fas fa-circle-exclamation"></i> <?= htmlspecialchars($erro) ?></div>
       <?php endif; ?>

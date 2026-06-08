@@ -10,7 +10,7 @@ define('DB_CHARSET', 'utf8mb4');
 
 define('APP_NAME', 'SIGEC');
 define('APP_ORG',  'Ministério da Educação e Cultura — Moçambique');
-define('SESSION_TIMEOUT', 1800); // 30 min
+define('SESSION_TIMEOUT', 900); // 15 min
 
 // ── DB Connection (PDO) ──────────────────────────────────────────────────────
 function db(): PDO {
