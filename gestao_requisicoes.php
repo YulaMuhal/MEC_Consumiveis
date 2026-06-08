@@ -64,14 +64,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ── Listar ────────────────────────────────────────────────────────────────────
-$filtroEstado = $_GET['estado'] ?? '';
-$where = $filtroEstado ? "WHERE r.estado='$filtroEstado'" : '';
-$requisicoes  = $db->query(
-    "SELECT r.*, u.nome AS req_nome, u.unidade AS req_unidade,
+$estadosValidos  = ['', 'pendente', 'realizada', 'perda'];
+$filtroEstado    = in_array($_GET['estado'] ?? '', $estadosValidos) ? ($_GET['estado'] ?? '') : '';
+
+$sqlLista = "SELECT r.*, u.nome AS req_nome, u.unidade AS req_unidade,
             (SELECT COUNT(*) FROM requisicao_itens ri WHERE ri.requisicao_id=r.id) AS num_itens
-     FROM requisicoes r JOIN utilizadores u ON u.id=r.utilizador_id
-     $where ORDER BY r.criado_em DESC"
-)->fetchAll();
+     FROM requisicoes r JOIN utilizadores u ON u.id=r.utilizador_id";
+if ($filtroEstado) {
+    $stmtLista = $db->prepare($sqlLista . " WHERE r.estado=? ORDER BY r.criado_em DESC");
+    $stmtLista->execute([$filtroEstado]);
+} else {
+    $stmtLista = $db->query($sqlLista . " ORDER BY r.criado_em DESC");
+}
+$requisicoes = $stmtLista->fetchAll();
 
 include 'partials/header.php';
 ?>
@@ -84,7 +89,13 @@ include 'partials/header.php';
   <?php foreach ([''=>'Todas','pendente'=>'Pendentes','realizada'=>'Realizadas','perda'=>'Perdas'] as $v=>$l): ?>
     <a href="?estado=<?= $v ?>" class="btn <?= $filtroEstado===$v?'btn-primary':'btn-ghost' ?> btn-sm">
       <?= $l ?> <?php
-        $cnt = $db->query("SELECT COUNT(*) FROM requisicoes" . ($v ? " WHERE estado='$v'" : ""))->fetchColumn();
+        if ($v) {
+            $stmtCnt = $db->prepare("SELECT COUNT(*) FROM requisicoes WHERE estado=?");
+            $stmtCnt->execute([$v]);
+            $cnt = $stmtCnt->fetchColumn();
+        } else {
+            $cnt = $db->query("SELECT COUNT(*) FROM requisicoes")->fetchColumn();
+        }
         if ($cnt > 0) echo "<span style='background:rgba(255,255,255,0.25);padding:1px 7px;border-radius:99px;font-size:0.75rem;margin-left:4px'>$cnt</span>";
       ?>
     </a>
