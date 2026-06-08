@@ -19,16 +19,27 @@ if ($periodo === 'hoje') $where .= " AND DATE(m.criado_em)=CURDATE()";
 elseif ($periodo === 'semana') $where .= " AND m.criado_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
 elseif ($periodo === 'mes')    $where .= " AND m.criado_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
 
+$perPage  = 50;
+$page     = max(1, (int)($_GET['pagina'] ?? 1));
+$countStmt = $db->prepare("SELECT COUNT(*) FROM movimentacoes m JOIN consumiveis c ON c.id=m.consumivel_id $where");
+$countStmt->execute($params);
+$total = (int)$countStmt->fetchColumn();
+$pag   = paginate($total, $perPage, $page);
+
 $stmt = $db->prepare(
     "SELECT m.*, c.nome AS consumivel_nome, c.unidade, u.nome AS user_nome
      FROM movimentacoes m
      JOIN consumiveis c ON c.id = m.consumivel_id
      LEFT JOIN utilizadores u ON u.id = m.utilizador_id
      $where
-     ORDER BY m.criado_em DESC LIMIT 200"
+     ORDER BY m.criado_em DESC LIMIT ? OFFSET ?"
 );
-$stmt->execute($params);
+$stmt->execute([...$params, $pag['perPage'], $pag['offset']]);
 $movs = $stmt->fetchAll();
+
+// URL base para paginação preservando filtros activos
+$filtroQuery = http_build_query(array_filter(['q'=>$busca,'tipo'=>$tipo,'periodo'=>$periodo]));
+$baseUrlPag  = 'movimentacoes.php' . ($filtroQuery ? '?' . $filtroQuery : '');
 
 include 'partials/header.php';
 ?>
@@ -67,7 +78,10 @@ include 'partials/header.php';
 <div class="card">
   <div class="card-title">
     <i class="fas fa-arrow-right-arrow-left" style="color:var(--verde)"></i>
-    <?= count($movs) ?> movimentação(ões)
+    Movimentações
+    <span style="margin-left:auto;font-size:0.82rem;color:var(--sub);font-weight:400">
+      Página <?= $pag['page'] ?> de <?= $pag['totalPages'] ?>
+    </span>
   </div>
   <div class="table-wrap">
     <table>
@@ -98,6 +112,7 @@ include 'partials/header.php';
       </tbody>
     </table>
   </div>
+  <?= paginationHtml($pag, $baseUrlPag) ?>
 </div>
 
 <?php include 'partials/footer.php'; ?>

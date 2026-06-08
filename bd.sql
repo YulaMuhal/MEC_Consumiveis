@@ -30,10 +30,10 @@ CREATE TABLE utilizadores (
   FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
--- Admin padrão (senha: admin@sigec2026  — bcrypt hash)
+-- Admin padrão (senha: admin@sigec2026  — bcrypt hash, cost 12)
 INSERT INTO utilizadores (nome, email, senha, role_id, unidade) VALUES
 ('Administrador SIGEC', 'admin@mec.gov.mz',
- '$2y$12$Xqr4z.9wP8vK2mN1sLhT3OeQjYbWuI5dFgHn6pCkMoVtRyAuE7G0i',
+ '$2y$12$/aRMP7f4/H70fHNMh./2WOLQ5OIiq.N0DhQcieYEygvg5/ot4TN0G',
  1, 'Direcção de TIC');
 
 -- Consumíveis (catálogo)

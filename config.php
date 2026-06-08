@@ -70,6 +70,33 @@ function logAction(string $acao, ?int $uid = null): void {
     } catch (Exception $e) { /* silent */ }
 }
 
+// ── Paginação ────────────────────────────────────────────────────────────────
+function paginate(int $total, int $perPage, int $page): array {
+    $totalPages = max(1, (int)ceil($total / $perPage));
+    $page       = max(1, min($page, $totalPages));
+    return [
+        'page'        => $page,
+        'perPage'     => $perPage,
+        'total'       => $total,
+        'totalPages'  => $totalPages,
+        'offset'      => ($page - 1) * $perPage,
+    ];
+}
+
+function paginationHtml(array $p, string $baseUrl): string {
+    if ($p['totalPages'] <= 1) return '';
+    $html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;flex-wrap:wrap;gap:10px">';
+    $html .= '<span style="font-size:0.85rem;color:var(--sub)">Total: <strong>' . $p['total'] . '</strong> registo(s)</span>';
+    $html .= '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    $sep = strpos($baseUrl, '?') !== false ? '&' : '?';
+    for ($i = 1; $i <= $p['totalPages']; $i++) {
+        $active = $i === $p['page'] ? 'btn-primary' : 'btn-ghost';
+        $html .= '<a href="' . $baseUrl . $sep . 'pagina=' . $i . '" class="btn ' . $active . ' btn-sm">' . $i . '</a>';
+    }
+    $html .= '</div></div>';
+    return $html;
+}
+
 // ── CSRF ─────────────────────────────────────────────────────────────────────
 function csrfToken(): string {
     if (empty($_SESSION['csrf_token'])) {
