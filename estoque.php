@@ -10,6 +10,7 @@ $err = '';
 
 // ── Entrada de stock (POST) ───────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $acao         = $_POST['acao'] ?? '';
     $consumivel_id= (int)($_POST['consumivel_id'] ?? 0);
     $quantidade   = (int)($_POST['quantidade'] ?? 0);
@@ -101,6 +102,7 @@ include 'partials/header.php';
       <button class="modal-close" onclick="document.getElementById('modalEntrada').classList.remove('open')">×</button>
     </div>
     <form method="POST">
+      <?= csrfField() ?>
       <input type="hidden" name="acao" value="entrada">
       <div class="form-row cols-2">
         <div class="form-group" style="grid-column:1/-1">
@@ -137,6 +139,7 @@ include 'partials/header.php';
       <button class="modal-close" onclick="document.getElementById('modalMin').classList.remove('open')">×</button>
     </div>
     <form method="POST">
+      <?= csrfField() ?>
       <input type="hidden" name="acao" value="atualizar_min">
       <input type="hidden" name="consumivel_id" id="modalMinId">
       <div class="form-group">

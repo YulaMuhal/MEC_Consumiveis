@@ -11,6 +11,7 @@ $err  = '';
 
 // ── Processar acção ───────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $reqId = (int)($_POST['req_id'] ?? 0);
     $acao  = $_POST['acao_req'] ?? '';
     $obs   = trim($_POST['observacao'] ?? '');
@@ -158,6 +159,7 @@ include 'partials/header.php';
       <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">×</button>
     </div>
     <form method="POST">
+      <?= csrfField() ?>
       <input type="hidden" name="req_id" id="procId">
       <input type="hidden" name="acao_req" id="procAcao">
       <div class="form-group">

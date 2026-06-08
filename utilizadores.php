@@ -9,6 +9,7 @@ $msg = '';
 $err = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $acao = $_POST['acao'] ?? '';
 
     if ($acao === 'criar') {
@@ -91,6 +92,7 @@ include 'partials/header.php';
           <td>
             <?php if ($u['id'] != currentUser()['id']): ?>
             <form method="POST" style="display:inline">
+              <?= csrfField() ?>
               <input type="hidden" name="acao" value="toggle">
               <input type="hidden" name="id" value="<?= $u['id'] ?>">
               <button type="submit" class="btn btn-ghost btn-sm"
@@ -115,6 +117,7 @@ include 'partials/header.php';
       <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">×</button>
     </div>
     <form method="POST">
+      <?= csrfField() ?>
       <input type="hidden" name="acao" value="criar">
       <div class="form-row cols-2">
         <div class="form-group" style="grid-column:1/-1">

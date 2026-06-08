@@ -9,6 +9,7 @@ $msg = '';
 $err = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $acao = $_POST['acao'] ?? '';
 
     if ($acao === 'criar') {
@@ -106,6 +107,7 @@ include 'partials/header.php';
       <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">×</button>
     </div>
     <form method="POST">
+      <?= csrfField() ?>
       <input type="hidden" name="acao" value="criar">
       <div class="form-row cols-2">
         <div class="form-group" style="grid-column:1/-1">
@@ -153,6 +155,7 @@ include 'partials/header.php';
       <button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('open')">×</button>
     </div>
     <form method="POST">
+      <?= csrfField() ?>
       <input type="hidden" name="acao" value="editar">
       <input type="hidden" name="id" id="editId">
       <div class="form-row cols-2">

@@ -13,6 +13,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['CONTENT_TYPE'])
 
     header('Content-Type: application/json');
     $data  = json_decode(file_get_contents('php://input'), true);
+
+    if (!hash_equals(csrfToken(), $data['csrf_token'] ?? '')) {
+        echo json_encode(['ok'=>false,'erro'=>'Pedido inválido. Recarregue a página.']); exit;
+    }
+
     $setor = trim($data['setor'] ?? '');
     $just  = trim($data['justificativa'] ?? '');
     $itens = $data['itens'] ?? [];
@@ -199,7 +204,8 @@ include 'partials/header.php';
 </div>
 
 <script>
-const CATALOGO = <?= json_encode(array_values($catalogo)) ?>;
+const CATALOGO    = <?= json_encode(array_values($catalogo)) ?>;
+const CSRF_TOKEN  = <?= json_encode(csrfToken()) ?>;
 let itemsReq = [];
 let currentStep = 1;
 
@@ -341,6 +347,7 @@ async function submeter() {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
+        csrf_token:     CSRF_TOKEN,
         setor:          document.getElementById('setorReq').value,
         justificativa:  document.getElementById('justReq').value,
         itens: itemsReq.map(i=>({consumivel_id:i.consumivel_id,quantidade:i.quantidade}))

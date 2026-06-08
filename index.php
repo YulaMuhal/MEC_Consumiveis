@@ -7,6 +7,7 @@ if (isLoggedIn()) { header('Location: dashboard.php'); exit; }
 $erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $email = trim($_POST['email'] ?? '');
     $senha = $_POST['senha'] ?? '';
 
@@ -292,6 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endif; ?>
 
       <form method="POST" action="index.php">
+        <?= csrfField() ?>
         <div class="form-group">
           <label for="email">Endereço de email</label>
           <div class="input-wrap">

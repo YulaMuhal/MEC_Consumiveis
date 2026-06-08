@@ -70,6 +70,26 @@ function logAction(string $acao, ?int $uid = null): void {
     } catch (Exception $e) { /* silent */ }
 }
 
+// ── CSRF ─────────────────────────────────────────────────────────────────────
+function csrfToken(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrfField(): string {
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrfToken()) . '">';
+}
+
+function verifyCsrf(): void {
+    $token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals(csrfToken(), $token)) {
+        http_response_code(403);
+        die('Pedido inválido. Recarregue a página e tente novamente.');
+    }
+}
+
 // ── Role labels ──────────────────────────────────────────────────────────────
 function roleLabel(string $role): string {
     return match($role) {
