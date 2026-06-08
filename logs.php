@@ -28,8 +28,10 @@ include 'partials/header.php';
   <div class="card-title">
     <i class="fas fa-shield-halved" style="color:var(--verde)"></i>
     Logs de Auditoria
-    <span style="margin-left:auto;font-size:0.82rem;color:var(--sub);font-weight:400">
-      Página <?= $pag['page'] ?> de <?= $pag['totalPages'] ?>
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span style="font-size:0.82rem;color:var(--sub);font-weight:400">Página <?= $pag['page'] ?> de <?= $pag['totalPages'] ?></span>
+      <a href="exportar.php?modulo=logs&formato=csv" class="btn btn-ghost btn-sm"><i class="fas fa-file-csv"></i> CSV</a>
+      <a href="exportar.php?modulo=logs&formato=pdf" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-print"></i> PDF</a>
     </span>
   </div>
   <div class="table-wrap">

@@ -121,6 +121,16 @@ CREATE TABLE itens_danificados (
   FOREIGN KEY (utilizador_id) REFERENCES utilizadores(id)
 );
 
+-- Tokens de reset de palavra-passe
+CREATE TABLE password_resets (
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  email        VARCHAR(100) NOT NULL,
+  token        VARCHAR(64)  NOT NULL UNIQUE,
+  expira_em    DATETIME     NOT NULL,
+  usado        TINYINT(1)   DEFAULT 0,
+  criado_em    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Logs de auditoria
 CREATE TABLE logs (
   id             INT AUTO_INCREMENT PRIMARY KEY,

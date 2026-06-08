@@ -70,6 +70,17 @@ function logAction(string $acao, ?int $uid = null): void {
     } catch (Exception $e) { /* silent */ }
 }
 
+// ── Email ─────────────────────────────────────────────────────────────────────
+function enviarEmail(string $para, string $assunto, string $corpo): bool {
+    $headers = implode("\r\n", [
+        'From: SIGEC <noreply@mec.gov.mz>',
+        'Reply-To: noreply@mec.gov.mz',
+        'Content-Type: text/html; charset=UTF-8',
+        'X-Mailer: PHP/' . phpversion(),
+    ]);
+    return mail($para, $assunto, $corpo, $headers);
+}
+
 // ── Paginação ────────────────────────────────────────────────────────────────
 function paginate(int $total, int $perPage, int $page): array {
     $totalPages = max(1, (int)ceil($total / $perPage));

@@ -309,6 +309,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" id="senha" name="senha" placeholder="••••••••" required>
           </div>
         </div>
+        <div style="text-align:right;margin-top:-8px;margin-bottom:4px">
+          <a href="esqueci_senha.php" style="font-size:0.83rem;color:var(--cinza);text-decoration:none">
+            Esqueceu a palavra-passe?
+          </a>
+        </div>
         <button type="submit" class="btn-login">
           <i class="fas fa-right-to-bracket"></i> Aceder ao SIGEC
         </button>

@@ -79,8 +79,11 @@ include 'partials/header.php';
   <div class="card-title">
     <i class="fas fa-arrow-right-arrow-left" style="color:var(--verde)"></i>
     Movimentações
-    <span style="margin-left:auto;font-size:0.82rem;color:var(--sub);font-weight:400">
-      Página <?= $pag['page'] ?> de <?= $pag['totalPages'] ?>
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span style="font-size:0.82rem;color:var(--sub);font-weight:400">Página <?= $pag['page'] ?> de <?= $pag['totalPages'] ?></span>
+      <?php $exportParams = http_build_query(array_filter(['modulo'=>'movimentacoes','q'=>$busca,'tipo'=>$tipo,'periodo'=>$periodo])); ?>
+      <a href="exportar.php?<?= $exportParams ?>&formato=csv" class="btn btn-ghost btn-sm"><i class="fas fa-file-csv"></i> CSV</a>
+      <a href="exportar.php?<?= $exportParams ?>&formato=pdf" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-print"></i> PDF</a>
     </span>
   </div>
   <div class="table-wrap">

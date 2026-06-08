@@ -93,8 +93,9 @@ include 'partials/header.php';
 <?php if ($msg): ?><div class="alert alert-success"><i class="fas fa-check-circle"></i> <?= htmlspecialchars($msg) ?></div><?php endif; ?>
 <?php if ($err): ?><div class="alert alert-error"><i class="fas fa-circle-exclamation"></i> <?= htmlspecialchars($err) ?></div><?php endif; ?>
 
-<!-- Filtro tabs -->
-<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+<!-- Filtro tabs + exportação -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;justify-content:space-between;align-items:center">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
   <?php foreach ([''=>'Todas','pendente'=>'Pendentes','realizada'=>'Realizadas','perda'=>'Perdas'] as $v=>$l): ?>
     <a href="?estado=<?= $v ?>" class="btn <?= $filtroEstado===$v?'btn-primary':'btn-ghost' ?> btn-sm">
       <?= $l ?> <?php
@@ -109,6 +110,11 @@ include 'partials/header.php';
       ?>
     </a>
   <?php endforeach; ?>
+</div>
+<div style="display:flex;gap:8px">
+  <a href="exportar.php?modulo=requisicoes&formato=csv" class="btn btn-ghost btn-sm"><i class="fas fa-file-csv"></i> CSV</a>
+  <a href="exportar.php?modulo=requisicoes&formato=pdf" target="_blank" class="btn btn-ghost btn-sm"><i class="fas fa-print"></i> PDF</a>
+</div>
 </div>
 
 <div class="card">
